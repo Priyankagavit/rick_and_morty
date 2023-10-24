@@ -8,15 +8,18 @@ class CharacterApiProvider {
   final Client client = Client();
   final String _baseUrl = "https://rickandmortyapi.com/api";
 
-  Future<CharactersModel> fetchCharacterList(int page) async {
+  Future<CharactersModel> fetchCharacterList(
+    int page, [
+    String status = '',
+    String gender = '',
+    String species = '',
+  ]) async {
     Response response;
-
-    response = await client.get(Uri.parse("$_baseUrl/character/?page=$page"));
+    response = await client.get(Uri.parse(
+        "$_baseUrl/character/?page=$page&status=$status&gender=$gender&species=$species"));
     if (response.statusCode == 200) {
-      // If the call to the server was successful, parse the JSON
       return CharactersModel.fromJson(json.decode(response.body));
     } else {
-      // If that call was not successful, throw an error.
       throw Exception('Failed to load post');
     }
   }

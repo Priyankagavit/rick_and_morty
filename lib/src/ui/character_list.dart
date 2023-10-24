@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/characters_model.dart';
 import '../blocs/characters_bloc.dart';
 import 'character_detail.dart';
+import 'filter/filter.dart';
 
 class CharactersList extends StatefulWidget {
   const CharactersList({super.key});
@@ -14,17 +15,20 @@ class CharactersList extends StatefulWidget {
 
 class CharactersListState extends State<CharactersList> {
   int _page = 1;
+  String status = "";
+  String gender = "";
+  String species = "";
   final ScrollController _scrollController = ScrollController();
   bool isLoading = false;
   @override
   void initState() {
     super.initState();
-    bloc.fetchAllCharacters(_page);
+    bloc.fetchAllCharacters(_page, status, gender, species);
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        bloc.fetchAllCharacters(++_page);
+        bloc.fetchAllCharacters(++_page, status, gender, species);
       }
     });
   }
@@ -38,6 +42,9 @@ class CharactersListState extends State<CharactersList> {
 
   @override
   Widget build(BuildContext context) {
+    print(status);
+    print(gender);
+    print(species);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Characters'),
@@ -47,7 +54,41 @@ class CharactersListState extends State<CharactersList> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {
-              return buildList(snapshot.data!);
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child: Filter(
+                      pageNumber: _page,
+                      updateStatus: (s) {
+                        setState(() {
+                          status = s;
+                        });
+                        _resetAndFetchCharacters();
+                      },
+                      updateGender: (g) {
+                        setState(() {
+                          gender = g;
+                        });
+                        _resetAndFetchCharacters();
+                      },
+                      updateSpecies: (s) {
+                        setState(() {
+                          species = s;
+                        });
+                        _resetAndFetchCharacters();
+                      },
+                      updatePageNumber: (page) {
+                        setState(() {
+                          _page = page;
+                        });
+                        _resetAndFetchCharacters();
+                      },
+                    ),
+                  ),
+                  Expanded(child: buildList(snapshot.data!)),
+                ],
+              );
             } else {
               return const Text('No data found');
             }
@@ -58,6 +99,10 @@ class CharactersListState extends State<CharactersList> {
         },
       ),
     );
+  }
+
+  void _resetAndFetchCharacters() {
+    bloc.fetchAllCharacters(_page, status, gender, species);
   }
 
   Widget buildList(CharactersModel data) {
